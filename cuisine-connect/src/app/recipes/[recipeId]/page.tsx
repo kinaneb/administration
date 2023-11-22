@@ -77,7 +77,7 @@ export default function Recipe({params}: {params: {recipeId: string}}) {
     setLoading(true);
     // setSimilarRecipes([]);
     if (recipe?.id !== '') {
-      let brief: string = `Tu es un chef cuisinier qui recommande des recettes de cuisine à des internautes. En fonction de cette recette : ${recipe.name}, tu devras proposer maximum 3 recettes similaires à l\'internaute. Tu renverras un tableau JSON contenant  uniquement des objets. Chaque objet sera constitué d’une clé name, et d’une autre clé thumnailurl. Tu ne dois rien renvoyer d\'autre que du JSON, pas de texte avant ou après pas de bonjour ni rien du tout d\'autre que du JSON et le tableau ne doit pas être inclu dans aucune propriété, seulement un tableau tout simple d’objets. Tu supprimeras toutes clé qui ne sont pas name ou thumbnailurl.`;
+      let brief: string = `Tu es un chef cuisinier qui recommande des recettes de cuisine à des internautes. En fonction de cette recette : ${recipe.name}, tu devras proposer maximum 3 recettes similaires à l&apos; internaute. Tu renverras un tableau JSON contenant  uniquement des objets. Chaque objet sera constitué d’une clé name, et d’une autre clé thumnailurl. Tu ne dois rien renvoyer d\'autre que du JSON, pas de texte avant ou après pas de bonjour ni rien du tout d\'autre que du JSON et le tableau ne doit pas être inclu dans aucune propriété, seulement un tableau tout simple d’objets. Tu supprimeras toutes clé qui ne sont pas name ou thumbnailurl.`;
       if(recipe) {
         updateIsInFavourites(recipe.favUsers);
         updateIsAlreadyRating(recipe.rateUsers);

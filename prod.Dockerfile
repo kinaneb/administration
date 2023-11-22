@@ -23,6 +23,8 @@ COPY cuisine-connect/public ./public
 COPY cuisine-connect/src ./src
 COPY cuisine-connect/next.config.js .
 COPY cuisine-connect/tsconfig.json .
+COPY cuisine-connect/.env.local .
+COPY cuisine-connect/global.d.ts .
 
 # Environment variables must be present at build time
 # https://github.com/vercel/next.js/discussions/14030
@@ -38,7 +40,7 @@ ENV NEXT_PUBLIC_ENV_VARIABLE=${NEXT_PUBLIC_ENV_VARIABLE}
 # Build Next.js based on the preferred package manager
 RUN \
   if [ -f yarn.lock ]; then yarn build; \
-  elif [ -f package-lock.json ]; then npm run build; \
+  elif [ -f package-lock.json ]; then npm run postinstall && npm run build; \
   elif [ -f pnpm-lock.yaml ]; then pnpm build; \
   else yarn build; \
   fi
@@ -56,6 +58,7 @@ RUN adduser --system --uid 1001 nextjs
 USER nextjs
 
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/.env.local ./.env.local
 
 # Automatically leverage output traces to reduce image size
 # https://nextjs.org/docs/advanced-features/output-file-tracing

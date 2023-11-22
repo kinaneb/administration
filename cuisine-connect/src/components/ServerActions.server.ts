@@ -3,7 +3,39 @@
 import prismadb from "../../lib/prismadb";
 import {OpenAI} from "openai";
 import {currentUser} from "@clerk/nextjs";
-import {recipes} from "../../prisma/recipes";
+
+type Favourite = {
+  recipe:
+    {
+      id: string,
+      name: string,
+      thumbnailUrl: string,
+      steps: string[],
+      ingredients: string[],
+      favUsers: string[],
+      rateUsers: string[],
+      ratingSum: number,
+      ratingCount: number,
+      averageRating: number
+    }
+};
+
+type Rating =  {
+  score: number,
+  recipe:
+    {
+      id: string,
+      name: string,
+      thumbnailUrl: string,
+      steps: string[],
+      ingredients: string[],
+      favUsers: string[],
+      rateUsers: string[],
+      ratingSum: number,
+      ratingCount: number,
+      averageRating: number
+    }
+}
 
 type AddToFavouritesProps = {
   userId: string,
@@ -67,12 +99,13 @@ export const removeFromFavourites = async ({userId, recipeId}: AddToFavouritesPr
         recipe: true
       }
     });
+    const updatedFavUsers: string[] = deletedFavourite.recipe.favUsers.filter((user:string) => user != deletedFavourite.userId);
     const updatedRecipe = await prismadb.recipe.update({
       where: {
         id: recipeId
       },
       data: {
-        favUsers: deletedFavourite.recipe.favUsers.filter(user => user != deletedFavourite.userId)
+        favUsers: updatedFavUsers
       }
     });
     return deletedFavourite;
@@ -81,19 +114,16 @@ export const removeFromFavourites = async ({userId, recipeId}: AddToFavouritesPr
   }
 }
 
-export const getFavourites = async (userId: string) => {
-  try {
-    return await prismadb.favourite.findMany({
-      where: {
-        userId: userId
-      },
-      include: {
-        recipe: true
-      }
-    });
-  } catch (error) {
-    console.error("getFavourites error: ", error);
-  }
+export async function getFavourites(userId: string):Promise <Favourite[]> {
+  const favourites = await prismadb.favourite.findMany({
+    where: {
+      userId: userId
+    },
+    include: {
+      recipe: true
+    }
+  });
+  return favourites;
 }
 export async function addOrUpdateRating({userId, recipeId, newScore, ratingSum, ratingCount}: AddOrUpdateProps) {
   const existingRating = await prismadb.rating.findUnique({
@@ -193,7 +223,7 @@ async function getUserFavouritesRecipes(userId: string) {
       recipe: true
     }
   });
-  return userFavourites.map((favorite) => favorite.recipe.name);
+  return userFavourites.map((favorite : Favourite) => favorite.recipe.name);
 }
 
 async function getUserRatingRecipes(userId: string) {
@@ -205,5 +235,5 @@ async function getUserRatingRecipes(userId: string) {
       recipe: true
     }
   });
-  return userRating.map((rating) => `recipe: ${rating.recipe.name}, rate score: ${rating.score}`)
+  return userRating.map((rating: Rating) => `recipe: ${rating.recipe.name}, rate score: ${rating.score}`)
 }

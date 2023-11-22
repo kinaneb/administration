@@ -1,7 +1,13 @@
+const {join} = require("path");
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     experimental: {
-        serverActions: true
+        // concurrentFeatures: false, // <- Set this option to false.
+        serverActions: true,
+        // outputFileTracingRoot: join(__dirname, '../'),
+        outputStandalone: true
+
+
     }
 }
 

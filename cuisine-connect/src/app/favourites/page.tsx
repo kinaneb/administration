@@ -2,10 +2,9 @@
 import {Grid, Stack, Typography} from "@mui/material";
 import React from "react";
 import { currentUser } from "@clerk/nextjs";
-import {getFavourites, removeFromFavourites} from "@/components/ServerActions.server";
+import {getFavourites} from "@/components/ServerActions.server";
 import FavouriteRecipe from "@/components/FavouriteRecipe";
 import Navbar from "@/components/Navbar";
-import ChatBot from "@/components/ChatBot";
 
 export default async function Favourites() {
   const user = await currentUser();
@@ -29,7 +28,7 @@ export default async function Favourites() {
               favourites.length > 0 ?
               favourites.map((favourite) => {
                 return (
-                  <FavouriteRecipe recipe={favourite.recipe}></FavouriteRecipe>
+                  <FavouriteRecipe recipe={favourite.recipe} key={favourite.recipe.id}></FavouriteRecipe>
                 )
               }) :
               (<Typography align="center" color={'white'}>
