@@ -1,0 +1,123 @@
+version: '3'
+
+services:
+  cuisine-connect:
+    container_name: cuisine-connect
+    build:
+      context: .
+      dockerfile: prod.Dockerfile
+      args:
+        ENV_VARIABLE: ${ENV_VARIABLE}
+        NEXT_PUBLIC_ENV_VARIABLE: ${NEXT_PUBLIC_ENV_VARIABLE}
+    env_file:
+      - ./cuisine-connect/.env.local
+    restart: always
+    ports: # to be removed at the end of configuration
+      - 3000:3000 
+#    networks:
+#      - my_network
+
+  cuisine-connect-db:
+    container_name: cuisine-connect-db
+    build:
+      context: .
+      dockerfile: mongodb.Dockerfile
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_REPLICA_HOST: cuisine-connect-db
+      MONGO_REPLICA_PORT: "27017"
+#    networks:
+#      - my_network
+
+  certbot:
+    image: certbot/certbot
+    #stdin_open: true
+    #tty: true
+ #   networks:
+ #     - my_network
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+      - ./log/certbot:/var/log/letsencrypt
+    command: certonly --webroot --webroot-path /var/www/certbot --force-renewal --email kbshara@myges.fr -d adminer.cuisine-connect.me -d www.adminer.cuisine-connect.me -d cuisine-connect.me -d www.cuisine-connect.me
+  
+  
+  web:
+    image: nginx
+    volumes:
+      - ./html:/usr/share/nginx/html
+      - ./nginx/conf/default.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/log:/var/log/nginx:rw
+      - ./certbot/conf:/etc/ssl
+#      - ./certbot/conf/:/etc/ssl/:ro
+      - ./certbot/www:/var/www/certbot
+    ports:
+      - "80:80"
+      - "443:443"
+      - "7880:7880"
+
+#    networks:
+#      - my_network
+
+  adminer:
+    image: adminer
+    restart: always
+ #   networks:
+ #     - my_network
+  
+  fail2ban:
+    image: lscr.io/linuxserver/fail2ban:latest
+    container_name: fail2ban
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    network_mode: host
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Paris
+      - VERBOSITY=-vv #optional
+    volumes:
+      - ./fail2ban/config:/config
+      - ./nginx/log:/var/log  # to be mapped with nginx logs
+    restart: unless-stopped
+    
+  goaccess:
+    image: 'xavierh/goaccess-for-nginxproxymanager:latest'
+    container_name: goaccess
+    restart: always
+    #ports:
+     #   - '7880:7880'
+    environment:
+        - TZ=Europe/Paris         
+       # - EXCLUDE_IPS=127.0.0.1 #optional - comma delimited 
+        - LOG_TYPE=NPM #optional - more information below
+    volumes:
+      - ./nginx/log:/opt/log
+    #- /path/to/host/custom:/opt/custom #optional, required if using log_type = CUSTOM
+  
+  samba:
+    image: joebiellik/samba-server
+    volumes:
+      # You must provide a Samba config file
+      - ./samba/smb.conf:/etc/samba/smb.conf
+  
+      # Shares
+      - ./samba/projects:/mnt/projects
+      - ./samba/videos:/mnt/videos:ro
+  
+    ports:
+      - "137:137/udp"
+      - "138:138/udp"
+      - "139:139/tcp"
+      - "445:445/tcp"
+  
+    environment:
+      - USERNAME=cuisine-connect
+      - PASSWORD=Esgi@ct0
+
+#networks:
+#  my_network:
+#    external: true
